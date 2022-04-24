@@ -188,7 +188,7 @@ js分为函数对象和普通对象，每个对象都有__proto__属性，但是
   asuna.getName() // 成功访问到父类的方法
   ```
 
-<img src="/Users/owsl/Desktop/works/notes/图/继承.png" alt="继承" style="zoom:50%;" align="left"/>
+<img src="/Users/owsl/Desktop/works/MyNotes/图/继承.png" alt="继承" style="zoom:50%;" align="left"/>
 
 
 
@@ -431,11 +431,26 @@ console.log(equality); // true
 
 
 
+#### 词法环境
+
+>**Lexical Environment** : it's the internal js engine construct that holds **identifier-variable mapping**. (here **identifier** refers to the name of variables/functions, and **variable** is the reference to actual object [including function type object] or primitive value). A lexical environment also holds a reference to a **parent lexical environment**.
+
+在 ES5 后，Scope 被替代为 Environment，Environment 取代了作用域，称为 **「Lexical Environment（词法环境）」**。
+
+在 JavaScript 中，每个运行的函数，代码块 `{...}` 以及整个脚本，都有一个被称为 **词法环境（Lexical Environment）** 的内部（隐藏）的关联对象。
+
+词法环境对象由两部分组成：
+
+1. **环境记录（Environment Record）** —— 一个存储所有局部变量作为其属性（包括一些其他信息，例如 `this` 的值）的对象。
+2. 对 **外部词法环境** 的引用，与外部代码相关联。
+
+一个“变量”只是 **环境记录** 这个特殊的内部对象的一个属性，与当前正在执行的（代码）块/函数/脚本有关，“获取或修改变量”意味着“获取或修改词法环境的一个属性”。
+
 #### 闭包
 
 根据 MDN 中文的定义，闭包的定义如下：
 
-> 在 JavaScript 中，每当创建一个函数，闭包就会在函数创建的同时被创建出来。可以在一个内层函数中访问到其外层函数的作用域。
+> 函数与对其状态即**词法环境**（**lexical environment**）的引用共同构成**闭包**（**closure**）。也就是说，闭包可以让你从内部函数访问外部函数作用域。在JavaScript，函数在每次创建时生成闭包。
 
 也可以这样说：
 
