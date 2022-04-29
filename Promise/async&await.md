@@ -10,9 +10,9 @@ async 函数（包含函数语句、函数表达式、Lambda表达式）会返�
 
 如果 async 函数没有返回值，它会返回 `Promise.resolve(undefined)`。
 
-Promise 的特点——无等待，所以在没有 `await` 的情况下执行 async 函数，它会立即执行，返回一个 Promise 对象，并且，绝不会阻塞后面的语句。这和普通返回Promise
+Promise 的特点——无等待，所以在没有 `await` 的情况下执行 async 函数，它会立即执行，返回一个 Promise 对象，并且，绝不会阻塞后面的语句。这和普通返回
 
-对象的函数并无二致。
+Promise对象的函数并无二致。
 
 #### await在等什么
 

@@ -467,7 +467,69 @@ console.log(equality); // true
 > - 1.「函数」和「函数内部能访问到的变量」的总和，就是一个闭包
 >   2. 函数和对其词法环境的引用捆绑在一起，这样的组合就是闭包
 
-闭包的弊端就是滥用会造成内存泄漏
+由于GC不能即使回收闭包里的变量，闭包会有弊端--滥用会造成内存泄漏
+
+
+
+#### 手写call apply bind
+
+- call和apply
+
+  ```js
+  // 手写call   思路就是通过对象调用函数隐式绑定来将this的指向变更为obj
+  Function.prototype._call = function (obj, ...arguments) {
+    // 因为调用call时传入指向undefined或者null，this会指向window，所以这儿需处理一下
+    obj = obj || window;
+    // Symbol是唯一的，防止重名key
+    const func = Symbol();
+    // 将func设置为obj的属性，值为this，这样obj.func时this便指向obj
+    obj[func] = this;
+    // 执行，返回执行值
+    return obj[func](...arguments);
+  }
+  
+  // apply同理，就是参数是数组
+  Function.prototype._apply = function (obj, args) {
+    obj = obj || window;
+    const func = Symbol();
+    obj[func] = this;
+    return obj[func](...args);
+  }
+  ```
+
+- bind
+
+  >`bind` 方法与 `call / apply` 最大的不同就是前者返回一个绑定上下文的**函数**，而后两者是**直接执行**了函数。
+  >
+  >一个绑定函数也能使用 new 操作符创建对象：这种行为就像把原函数当成构造器，提供的this值被忽略，同时调用时的参数被提供给模拟函数,所以需要处理这种情况
+
+  ```js
+  Function.prototype._bind = function (context) {
+    if (typeof this !== "function") {
+      throw new Error("Function.prototype.bind - what is trying to be bound is not callable");
+    }
+    // 保存bind函数的this，指向调用者
+    var _self = this
+    var args = Array.prototype.slice.call(arguments, 1);
+  
+    var fBound = function () {
+      var bindArgs = Array.prototype.slice.call(arguments);
+      // 当作为构造函数调用时，this 指向实例，此时结果为 true，将绑定函数的 this 指向该实例，可以让实例获得来自绑定函数的值
+      // 当作为普通函数调用时，this 指向 window，此时结果为 false，将绑定函数的 this 指向 context
+      return _self.apply(this instanceof fBound ? this : context, args.concat(bindArgs));
+    }
+    // 若调用bind的函数不能作为构造函数时，会报错   this.prototype=undefined     所以这儿需做一下判断
+    console.log(this.prototype);
+    if (this.prototype) {
+      fBound.prototype = Object.create(this.prototype)
+    }
+    return fBound; //返回一个函数
+  }
+  ```
+
+[js 什么情况下函数的prototype是undefined](https://segmentfault.com/q/1010000016601164)
+
+
 
 
 
