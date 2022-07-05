@@ -85,11 +85,11 @@ vite官网：https://vitejs.cn
   - 真正的按需编译，不再等待整个应用编译完成。
 - 传统构建 与 vite构建对比图
 
-<img src="https://cn.vitejs.dev/assets/bundler.37740380.png" style="width:500px;height:280px;float:left" /><img src="https://cn.vitejs.dev/assets/esm.3070012d.png" style="width:480px;height:280px" />
+<img src="https://cn.vitejs.dev/assets/bundler.37740380.png" style="width:500px;height:280px;float:left" /><img src="https://cn.vitejs.dev/assets/esm.3070012d.png" style="width:480px;height:280px;margin-left:20px " />
 
 ```bash
 ## 创建工程
-npm init vite-app <project-name>
+ npm init vite@latest my-vue-app -- --template vue
 ## 进入工程目录
 cd <project-name>
 ## 安装依赖
@@ -113,28 +113,40 @@ npm run dev
 6. 注意点：
    1. 尽量不要与Vue2.x配置混用
       - Vue2.x配置（data、methos、computed...）中<strong style="color:#DD5145">可以访问到</strong>setup中的属性、方法。
-      - 但在setup中<strong style="color:#DD5145">不能访问到</strong>Vue2.x配置（data、methos、computed...）。
+      - 但在setup中<strong style="color:#DD5145">不能访问到</strong>Vue2.x配置（data、methods、computed...）。
       - 如果有重名, setup优先。
    2. setup不能是一个async函数，因为返回值不再是return的对象, 而是promise, 模板看不到return对象中的属性。（后期也可以返回一个Promise实例，但需要Suspense和异步组件的配合）
 
 ##  2.ref函数
 
 - 作用: 定义一个响应式的数据
+
 - 语法: ```const xxx = ref(initValue)``` 
+  
+  > 返回一个RefImpl(Reference Implement)
+  
+  <img src="https://raw.githubusercontent.com/zhedieya/MyPics/main/typora-img/image-20220510222855596.png" alt="image-20220510222855596" style="zoom:50%;" align='left' />
+  
   - 创建一个包含响应式数据的<strong style="color:#DD5145">引用对象（reference对象，简称ref对象）</strong>。
   - JS中操作数据： ```xxx.value```
   - 模板中读取数据: 不需要.value，直接：```<div>{{xxx}}</div>```
+  
 - 备注：
   - 接收的数据可以是：基本类型、也可以是对象类型。
   - 基本类型的数据：响应式依然是靠``Object.defineProperty()``的```get```与```set```完成的。
-  - 对象类型的数据：内部 <i style="color:gray;font-weight:bold">“ 求助 ”</i> 了Vue3.0中的一个新函数—— ```reactive```函数。
+  - 对象类型的数据：内部 <i style="color:gray;font-weight:bold">“ 求助 ”</i> 了Vue3.0中的一个新函数——```reactive```函数。
 
 ## 3.reactive函数
 
 - 作用: 定义一个<strong style="color:#DD5145">对象类型</strong>的响应式数据（基本类型不要用它，要用```ref```函数）
+
 - 语法：```const 代理对象= reactive(源对象)```接收一个对象（或数组），返回一个<strong style="color:#DD5145">代理对象（Proxy的实例对象，简称proxy对象）</strong>
+
+  <img src="https://raw.githubusercontent.com/zhedieya/MyPics/main/typora-img/image-20220510230454229.png" alt="image-20220510230454229" style="zoom:50%;" align="left"/>
+
 - reactive定义的响应式数据是“深层次的”。
-- 内部基于 ES6 的 Proxy 实现，通过代理对象操作源对象内部数据进行操作。
+
+- 内部基于 ES6 的`Proxy`实现，通过代理对象操作源对象内部数据进行操作。
 
 ## 4.Vue3.0中的响应式原理
 
@@ -147,20 +159,20 @@ npm run dev
   
     ```js
     Object.defineProperty(data, 'count', {
-        get () {}, 
-        set () {}
+        get(){}, 
+        set(){}
     })
     ```
 
 - 存在问题：
-  - 新增属性、删除属性, 界面不会更新。
-  - 直接通过下标修改数组, 界面不会自动更新。
+  - 新增属性、删除属性, 界面不会更新(除非使用`Vue.set()`或者`this.$set()` delete同理)。
+  - 直接通过下标修改数组, 界面不会自动更新(除非使用`set`或者`splice`)。
 
 ### Vue3.0的响应式
 
 - 实现原理: 
-  - 通过Proxy（代理）:  拦截对象中任意属性的变化, 包括：属性值的读写、属性的添加、属性的删除等。
-  - 通过Reflect（反射）:  对源对象的属性进行操作。
+  - 通过Proxy（代理）:拦截对象中任意属性的变化, 包括：属性值的读写、属性的添加、属性的删除等。
+  - 通过Reflect（反射）:对源对象的属性进行操作。
   - MDN文档中描述的Proxy与Reflect：
     - Proxy：https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Proxy
     
@@ -184,6 +196,8 @@ npm run dev
       
       proxy.name = 'tom'   
       ```
+
+- 使用Reflect好处就是Reflect有返回值，可以根据这个返回值进行错误处理，而若使用defineProperty，得多次使用try catch，会影响代码的健壮性  
 
 ## 5.reactive对比ref
 
@@ -264,13 +278,13 @@ npm run dev
   
   /* 情况三：监视reactive定义的响应式数据
   			若watch监视的是reactive定义的响应式数据，则无法正确获得oldValue！！
-  			若watch监视的是reactive定义的响应式数据，则强制开启了深度监视 
+  			若watch监视的是reactive定义的响应式数据，则强制开启深度监视 
   */
   watch(person,(newValue,oldValue)=>{
   	console.log('person变化了',newValue,oldValue)
   },{immediate:true,deep:false}) //此处的deep配置不再奏效
   
-  //情况四：监视reactive定义的响应式数据中的某个属性
+  //情况四：监视reactive定义的响应式数据中的某个属性,该属性要写成函数形式
   watch(()=>person.job,(newValue,oldValue)=>{
   	console.log('person的job变化了',newValue,oldValue)
   },{immediate:true,deep:true}) 
@@ -283,7 +297,7 @@ npm run dev
   //特殊情况
   watch(()=>person.job,(newValue,oldValue)=>{
       console.log('person的job变化了',newValue,oldValue)
-  },{deep:true}) //此处由于监视的是reactive素定义的对象中的某个属性，所以deep配置有效
+  },{deep:true}) //此处由于监视的是reactive所定义的对象中的某个属性，所以deep配置有效
   ```
 
 ### 3.watchEffect函数
@@ -346,7 +360,27 @@ npm run dev
 
 
 
-1
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 - Vue3.0中可以继续使用Vue2.x中的生命周期钩子，但有有两个被更名：
   - ```beforeDestroy```改名为 ```beforeUnmount```
@@ -375,7 +409,7 @@ npm run dev
 
 - 作用：创建一个 ref 对象，其value值指向另一个对象中的某个属性。
 - 语法：```const name = toRef(person,'name')```
-- 应用:   要将响应式对象中的某个属性单独提供给外部使用时。
+- 应用: **要将响应式对象中的某个属性单独提供给外部使用时。**
 
 
 - 扩展：```toRefs``` 与```toRef```功能一致，但可以批量创建多个 ref 对象，语法：```toRefs(person)```
@@ -534,6 +568,19 @@ npm run dev
 <div style="width:430px;height:340px;overflow:hidden;float:left">
     <img src="https://p9-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/6cc55165c0e34069a75fe36f8712eb80~tplv-k3u1fbpfcp-watermark.image"style="height:360px"/>
 </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
