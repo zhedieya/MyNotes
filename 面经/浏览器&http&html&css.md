@@ -75,9 +75,11 @@ url地址美观，路由跳转不需要重新加载页面。
 >
 >4．回流与重绘  （重排 重绘)
 >
->5. Display 
+>5．Display 
 
-<img src="/Users/owsl/Library/Application Support/typora-user-images/image-20220323101801278.png" alt="image-20220323101801278" style="zoom:50%;" align="left"/>
+<img src="https://raw.githubusercontent.com/zhedieya/MyPics/main/typora-img/image-20220720210222290.png" alt="image-20220720210222290" style="zoom:50%;" />
+
+
 
 
 
