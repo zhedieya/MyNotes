@@ -31,7 +31,7 @@
 
 视图中会用到`data`中某`key`，这称为依赖。同⼀个`key`可能出现多次，每次都需要收集出来用⼀个`Watcher`来维护它们，此过程称为依赖收集；多个`Watcher`需要⼀个`Dep`来管理，需要更新时由`Dep`统⼀通知。
 
-<img src="https://raw.githubusercontent.com/zhedieya/MyPics/main/typora-img/image-20220510133736471.png" alt="image-20220510133736471" style="zoom:50%;" />
+<img src="https://raw.githubusercontent.com/zhedieya/MyPics/main/typora-img/image-20220729233111773.png" alt="image-20220729233111773" style="zoom:50%;" />
 
 **vue通过三大模块来实现的**：
 
