@@ -145,3 +145,10 @@ a.func2()     // this.func1 is not a function
 
 setTimeout回调函数会经历 Event Loop => Execution Stack => Execute，this指向window，是因为 Execute 在 Global Execution Context下执行
 
+
+
+#### 回调函数
+
+被作为实参传入另一函数，并在该外部函数内被调用，用以来完成某些任务的函数，称为回调函数。
+
+> *回调函数*作为*高阶函数*的参数，高阶函数通过调用回调函数来执行操作。
