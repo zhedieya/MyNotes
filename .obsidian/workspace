@@ -1,0 +1,137 @@
+{
+  "main": {
+    "id": "de54afab72c70399",
+    "type": "split",
+    "children": [
+      {
+        "id": "9fae95a40e06e398",
+        "type": "leaf",
+        "state": {
+          "type": "markdown",
+          "state": {
+            "file": "TODOList/持续学习.md",
+            "mode": "source",
+            "source": false
+          }
+        }
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "ea39f5fd6b2850c5",
+    "type": "split",
+    "children": [
+      {
+        "id": "6803eee8633b09b0",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "5cbe2332692974d3",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {}
+            }
+          },
+          {
+            "id": "ed9264c1f7ce2296",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              }
+            }
+          },
+          {
+            "id": "e2fae44cf569a0da",
+            "type": "leaf",
+            "state": {
+              "type": "starred",
+              "state": {}
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "3c190fe60b5a563f",
+    "type": "split",
+    "children": [
+      {
+        "id": "4ea0da7ee4817bf6",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "0bca1d09b1bb033a",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "TODOList/持续学习.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              }
+            }
+          },
+          {
+            "id": "5a681bbaeb2cad33",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "TODOList/持续学习.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              }
+            }
+          },
+          {
+            "id": "770af7f64d3c9bf8",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true
+              }
+            }
+          },
+          {
+            "id": "99715e79318b056b",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "TODOList/持续学习.md"
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "active": "9fae95a40e06e398",
+  "lastOpenFiles": [
+    "毕设/模块化思想.md",
+    "毕设/电商管理后台 API 接口文档.md",
+    "毕设/答辩稿.md"
+  ]
+}

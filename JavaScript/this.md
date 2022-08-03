@@ -26,6 +26,22 @@ function foo() {
 foo();
 ```
 
+> 注：只有foo()运行在非严格模式下时，默认绑定才能绑到全局对象,这时，严格模式下调用foo()不影响默认绑定             ----你不知道的js(上p84)
+
+```js
+function foo() {
+  console.log(this); // window
+}
+var a = 2;
+
+(fuction(){
+ "use strict";
+ foo(); //2
+ })()
+```
+
+上面的代码foo运行在非严格模式下，但调用在严格模式下，不影响默认绑定
+
 ##### 案例二：函数调用链（一个函数又调用另外一个函数）
 
 ```js
@@ -63,13 +79,16 @@ var obj = {
   foo: foo
 }
 obj.foo();
+
 ```
+
+> 注：严格来说，foo函数不属于obj对象，可以说函数被调用时obj对象<mark>"拥有"或者"包含"</mark>这个**函数引用**；当函数引用有上下文对象时，**隐式绑定**规则会把函数调用中的this绑定到这个上下文对象。            ----你不知道的js(上p85)
 
 ##### 案例二：案例一的变化
 
 - 我们通过obj2又引用了obj1对象，再通过obj1对象调用foo函数；
 - 那么foo调用的位置上其实还是obj1被绑定了this；
-- 对象属性链中只有最后一层会影响到调用位置。
+- **对象属性链中只有最后一层会影响到调用位置**。
 
 ```js
 function foo() {
@@ -104,14 +123,18 @@ var obj1 = {
   foo: foo
 }
 
-// 讲obj1的foo赋值给bar
+// 将obj1的foo赋值给bar
 var bar = obj1.foo;
 bar();
 ```
 
-**2.将函数作为参数，传入到另一个函数中** 
+> 注：实际上var引用的是foo函数本身，因此此时的bar()其实是一个不带任何修饰的函数调用
 
-隐式绑定的丢失也会发生在回调函数中，foo(bar)执行时相当于把bar赋值给参数func，最后会执行这个func，这样只是一个独立函数的调用；
+**2.将函数作为参数，传入到另一个函数中**(回调函数)
+
+- 参数传递其实就是一种隐式赋值
+
+- 隐式绑定的丢失也会发生在回调函数中，foo(bar)执行时相当于把bar赋值给参数func，最后会执行这个func，这样只是一个独立函数的调用；
 
 ```js
 function foo(func) {
@@ -177,8 +200,6 @@ foo.call(123); // Number对象,存放123
 
 如果我们希望一个函数总是显式的绑定到一个对象上，可以怎么做呢？
 
-方案一：自己手写一个辅助函数（了解）
-
 - 手动写一个bind的辅助函数
 - 这个辅助函数的目的是在执行foo时，总是让它的this绑定到obj对象上
 
@@ -197,11 +218,45 @@ function bind(func, obj) {
 var bar = bind(foo, obj);
 
 bar(); // obj对象
-bar(); // obj对象
-bar(); // obj对象
 ```
 
-方案二：使用`Function.prototype.bind`
+##### 硬绑定(bind)
+
+硬绑定就是显式绑定的一个变种，可以解决之前提出的丢失绑定问题。
+
+典型案例：
+
+```js
+function foo(sth) {
+  return this.a + sth;
+}
+let obj = {
+  a: 2
+};
+let bar = function () {
+  return foo.apply(obj, arguments)
+}
+var b = bar(3);
+console.log(b); // 5
+
+/** 演变为↓ */
+function foo(sth) {
+  return this.a + sth;
+}
+let obj = {
+  a: 2
+};
+function bind(fn, obj) {
+  return function () {
+    return fn.apply(obj, arguments)
+  }
+}
+let bar = bind(foo, obj)
+var b = bar(3);
+console.log(b); // 5
+```
+
+于是ES5提供了内置方法`Function.prototype.bind`
 
 ```js
 function foo() {
@@ -215,24 +270,20 @@ var obj = {
 var bar = foo.bind(obj);
 
 bar(); // obj对象
-bar(); // obj对象
-bar(); // obj对象
 ```
-
-
 
 #### 2.4 new绑定
 
-JavaScript中的函数可以当做一个类的构造函数来使用，也就是使用new关键字。
+> 注：JavaScript里的”构造函数“只是一些使用new操作符时被调用的函数，和其他一些面向类的语言完全不一样
 
 使用new来调用函数的时候，就会新对象绑定到这个函数的this上。
 
 会执行如下的操作：
 
-- 1.定义一个空对象；
-- 2.将空对象的隐式原型指向构造函数的显式原型
+- 1.创建(构造)一个全新的对象；
+- 2.将空对象的隐式原型指向构造函数的显式原型(这个新对象会被执行Prototype连接)
 - 3.这个新对象会绑定到函数调用的this上（this的绑定在这个步骤完成）；
-- 4.返回新对象；
+- 4.如果函数没有返回其他对象，那么new表达式中的函数调用会自动返回这个新对象；
 
 ```js
 function _new(func, ...args) {
@@ -265,6 +316,47 @@ var p = new Person("why");
 console.log(p);
 ```
 
+#### 衍生思考(手写bind--new中使用硬绑定--科里化)
+
+```js
+Function.prototype._bind = function (context) {
+  if (typeof this !== "function") {
+    throw new Error("Function.prototype.bind - what is trying to be bound is not callable");
+  }
+  // 保存bind函数的this，指向调用者
+  var _self = this
+  var args = Array.prototype.slice.call(arguments, 1);
+
+  var fBound = function () {
+    var bindArgs = Array.prototype.slice.call(arguments);
+    /** 这段代码会判断硬绑定函数是否被new调用，如果是的话会使用新创建的this替换硬绑定的this */
+    // 当作为构造函数调用时，this 指向实例，此时结果为 true，将绑定函数的 this 指向该实例，可以让实例获得来自绑定函数的值
+    // 当作为普通函数调用时，this 指向 window，此时结果为 false，将绑定函数的 this 指向 context
+    return _self.apply(this instanceof fBound ? this : context, args.concat(bindArgs));
+  }
+  // 若调用bind的函数不能作为构造函数(比如下面的obj.testFn)会报错     所以这儿需做一下判断
+  if (this.prototype) {
+    fBound.prototype = Object.create(this.prototype)
+  }
+  return fBound; //返回一个函数
+}
+```
+
+之所以要在new中使用硬绑定函数，主要目的是<mark>预先设置函数的一些参数</mark>,这样在使用new进行初始化的时候就可以只传入其余的参数，是”**科里化**“的一种
+
+```js
+// a way of accomplishing Currying
+function foo(p1, p2) {
+  this.val = p1 + p2
+}
+// 使用null是因为本例中并不关心硬绑定的this是什么，反正new时会被修改
+var bar = foo.bind(null, 2)
+var test = new bar(3)
+console.log(test.val); // 5
+```
+
+
+
 ### 三.this的指向
 
 **this 永远指向最后调用它的那个对象**
@@ -281,7 +373,65 @@ console.log(p);
 
 6.如果是箭头函数，箭头函数的this继承的是外层代码块的this。
 
-### 四.改变 this 的指向
+### 四.绑定例外
+
+#### 被忽略的this
+
+若把null或undefined作为this的绑定对象传入call.apply.bind，这些值在调用时会被忽略，实际应用的是默认绑定规则：
+
+```javascript
+function foo(){
+  console.log(this.a)
+}
+var a = 2
+foo.call(null) //2
+```
+
+常见的做法，比如展开数组和使用bind科里化
+
+```js
+function spread(a,b){
+  console.log(a,b);  
+}
+spread.apply(null,[2,3]) //2 3
+
+let curry = spread.bind(null,2)
+curry(3) //2 3
+
+spread.bind(null,2)(3) //2 3
+```
+
+##### [How does the Math.max.apply() work](https://stackoverflow.com/questions/21255138/how-does-the-math-max-apply-work)
+
+`apply` accepts an array and it applies the array as parameters to the actual function. So,
+
+```js
+Math.max.apply(Math, list);
+```
+
+can be understood as,
+
+```js
+Math.max("12", "23", "100", "34", "56", "9", "233");
+```
+
+So, `apply` is a convenient way to pass an array of data as parameters to a function. Remember
+
+```js
+console.log(Math.max(list));   # NaN
+```
+
+will not work, because `max` doesn't accept an array as input.
+
+There is another advantage, of using `apply`, you can choose your own context. The first parameter, you pass to `apply` of any function, will be the `this` inside that function. But, `max` doesn't depend on the current context. So, anything would work in-place of `Math`.
+
+```js
+console.log(Math.max.apply(undefined, list));   # 233
+console.log(Math.max.apply(null, list));        # 233
+console.log(Math.max.apply(Math, list));        # 233
+```
+
+### 五.改变 this 的指向
 
 - 使用 ES6 的箭头函数
 - 在函数内部使用 `_this = this`
@@ -313,11 +463,11 @@ a.func2()     // this.func1 is not a function
 
 ES6的箭头函数的this会始终指向函数定义时的this，而非执行时。
 
-因为：“箭头函数中没有 this 绑定，必须通过查找作用域链来决定其值，如果箭头函数被非箭头函数包含，则 this 绑定的是最近一层非箭头函数的 this，否则，this为
-
-undefined”。
+因为：“<mark>箭头函数中没有 this 绑定，必须通过查找作用域链来决定其值，如果箭头函数被非箭头函数包含，则 this 绑定的是最近一层非箭头函数的 this，否则，this为undefined</mark>”。
 
 函数体内的this对象，继承的是外层代码块的this。
+
+机制类似于下面的第二条
 
 ```js
 func2: function () {
