@@ -146,7 +146,7 @@
 `axios.all(promises)`: 用于批量执行多个异步请求
 `axios.spread()`: 用来指定接收所有成功数据的回调函数的方法
 
-<img src="/Users/owsl/Desktop/works/MyNotes/图/20210304172721643.jpg" alt="20210304172721643" style="zoom:80%;" align="left" />
+<img src="https://raw.githubusercontent.com/zhedieya/MyPics/main/typora-img/image-20220806205435326.png" alt="image-20220806205435326" style="zoom:50%;" />
 
 #### 4.难点语法的理解和使用
 

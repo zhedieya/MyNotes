@@ -55,7 +55,7 @@ https://blog.csdn.net/weixin_44972008/article/details/113779708
 
 ##### 4.Promise的基本流程
 
-<img src="/Users/owsl/Library/Application Support/typora-user-images/image-20220320134723587.png" alt="image-20220320134723587" style="zoom:67%;" />
+![image-20220806205601006](https://raw.githubusercontent.com/zhedieya/MyPics/main/typora-img/image-20220806205601006.png)
 
 ##### 5.Promise的基本使用
 
