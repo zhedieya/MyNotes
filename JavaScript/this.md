@@ -168,9 +168,7 @@ var obj={
 foo(obj.bar);
 ```
 
-上面的代码 把`obj.bar`当作参数传递给`foo`函数时，在`foo`函数里，有隐式的函数赋值`func=obj.bar`。只是把`bar`函数赋给了`func`，而`func`与`obj`对象则毫无
-
-关系。
+上面的代码 把`obj.bar`当作参数传递给`foo`函数时，在`foo`函数里，有隐式的函数赋值`func=obj.bar`。只是把`bar`函数赋给了`func`，而`func`与`obj`对象则毫无关系。
 
  **3.setTimeout 等内置函数**
 

@@ -116,11 +116,7 @@ function fn() {
 fn()复制代码
 ```
 
-这里的 innerFunction() 是作为一个函数调用的，没有挂载在任何对象上，所以对于没有挂载在任何对象上的函数，在非严格模式下 this 就是指向 window 的
-
-
-
-setTimeout
+这里的 innerFunction() 是作为一个函数调用的，没有挂载在任何对象上，所以对于没有挂载在任何对象上的函数，在非严格模式下 this 就是指向 window 的setTimeout
 
 ```js
 var name = "windowsName";
