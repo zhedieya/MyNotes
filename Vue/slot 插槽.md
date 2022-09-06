@@ -221,7 +221,3 @@
 	<button>{{slotProps.item}}-{{slotProps.index}}</button>
 </show-name>
 ```
-
-
-
-### 
