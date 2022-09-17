@@ -598,11 +598,11 @@ JavaScript遵循IEEA754 使用64位双精度浮点数编码,包含1位符号位�
 
 #### Event Loop事件循环
 
-<img src="/Users/owsl/Library/Application Support/typora-user-images/image-20220504205317169.png" alt="image-20220504205317169" style="zoom:60%;" align="left" />
+<img src="https://raw.githubusercontent.com/zhedieya/MyPics/main/typora-img/image-20220913214808018.png" alt="image-20220913214808018" style="zoom:50%;" />
 
 
 
-首先，整体的`script`(作为第一个宏任务)开始执行的时候，会把所有代码分为`同步任务`、`异步任务`两部分
+首先，整体的script(作为第一个宏任务)开始执行的时候，会把所有代码分为`同步任务`、`异步任务`两部分
 
 同步任务会直接进入主线程依次执行
 
