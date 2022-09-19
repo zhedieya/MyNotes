@@ -81,6 +81,61 @@ Array.from(arrayLike); // ["name", "age", "sex"]
 Array.prototype.concat.apply([], arrayLike)
 ```
 
+⚠️ **拓展**
+
+[How does `Array.prototype.slice.call` work](https://stackoverflow.com/questions/7056925/how-does-array-prototype-slice-call-work)
+
+>What happens under the hood is that when `.slice()` is called normally, `this` is an Array, and then it just iterates over that Array, and does its work.
+>
+>How is `this` in the `.slice()` function an Array? Because when you do:
+>
+>```js
+>object.method();
+>```
+>
+>...the `object` automatically becomes the value of `this` in the `method()`. So with:
+>
+>```js
+>[1,2,3].slice()
+>```
+>
+>...the `[1,2,3]` Array is set as the value of `this` in `.slice()`.
+>
+>------
+>
+>But what if you could substitute something else as the `this` value? As long as whatever you substitute has a numeric `.length` property, and a bunch of properties that are numeric indices, it should work. This type of object is often called an *array-like object*.
+>
+>The `.call()` and `.apply()` methods let you *manually* set the value of `this` in a function. So if we set the value of `this` in `.slice()` to an *array-like object*, `.slice()` w**ill just *assume* it's working with an Array**, and will do its thing.
+>
+>Take this plain object as an example.
+>
+>```js
+>var my_object = {
+>    '0': 'zero',
+>    '1': 'one',
+>    '2': 'two',
+>    '3': 'three',
+>    '4': 'four',
+>    length: 5
+>};
+>```
+>
+>This is obviously not an Array, but if you can set it as the `this` value of `.slice()`, then it will just work, because it looks enough like an Array for `.slice()` to work properly.
+>
+>```js
+>var sliced = Array.prototype.slice.call( my_object, 3 );
+>```
+>
+>**Example:** http://jsfiddle.net/wSvkv/
+>
+>As you can see in the console, the result is what we expect:
+>
+>```js
+>['three','four'];
+>```
+>
+>**So this is what happens when you set an `arguments` object as the `this` value of `.slice()`. Because `arguments` has a `.length` property and a bunch of numeric indices, `.slice()` just goes about its work as if it were working on a real Array.**
+
 #### Arguments 对象
 
 Arguments 对象只定义在函数体中，包括了函数的参数和其他属性。在函数体中，arguments 指代该函数的 Arguments 对象。
