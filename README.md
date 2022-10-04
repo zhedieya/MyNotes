@@ -8,6 +8,9 @@
 
 
 
+<img src="https://raw.githubusercontent.com/zhedieya/MyPics/main/typora-img/image-20220928230303739.png" alt="image-20220928230303739" style="zoom:50%;" />
+
+<img src="https://raw.githubusercontent.com/zhedieya/MyPics/main/typora-img/image-20221002124321778.png" alt="image-20221002124321778" style="zoom:50%;" />
+
 #### 持续更新中.......
 
-<img src="https://raw.githubusercontent.com/zhedieya/MyPics/main/typora-img/image-20220924201221929.png" alt="image-20220924201221929" style="zoom:50%;" />
