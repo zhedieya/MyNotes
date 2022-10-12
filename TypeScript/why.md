@@ -1,4 +1,4 @@
-### 什么是TypeScript
+### ·什么是TypeScript
 
 > Typed JavaScript at Any Scale.
 

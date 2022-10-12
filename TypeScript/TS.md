@@ -166,7 +166,7 @@ myFavoriteNumber = 7;
 // index.ts(2,1): error TS2322: Type 'number' is not assignable to type 'string'.
 ```
 
-TypeScript 会在没有明确的指定类型的时候推测出一个类型，这就是类型推论。
+TypeScript 会在没有明确的指定类型的时候推测出一个类型，这就是**类型推论**。
 
 如果没有明确的指定类型，那么 TypeScript 会依照类型推论（Type Inference）的规则推断出一个类型。
 
@@ -204,7 +204,7 @@ myFavoriteNumber = true;
 
 这里 ` let myFavoriteNumber: string | number ` 的含义是，<font color=FF0000> 允许 `myFavoriteNumber` 的类型是 `string` 或者 `number` ，但是不能是其他类型</font>。
 
-当 TypeScript 不确定一个联合类型的变量到底是哪个类型的时候，<font color=FF0000> 我们只能访问此联合类型的所有类型里共有的属性或方法</font>。
+当 TypeScript 不确定一个联合类型的变量到底是哪个类型的时候，<font color=FF0000> 我们只能访问此联合类型的所有类型里**共有的**属性或方法</font>。
 
 ```ts
 function getLength(something: string | number): number {
@@ -266,7 +266,7 @@ let tom: Person = {
 
 ##### 任意属性
 
-> 👀 注：更专业的名称叫作 “索引签名” ( [Index Signatures](https://www.typescriptlang.org/docs/handbook/2/objects.html#index-signatures) )，也可参考 [[#TS 类型系统中的类型#接口]] 中的 “可索引签名”
+> 👀 注：更专业的名称叫作 “**索引签名**” ( [Index Signatures](https://www.typescriptlang.org/docs/handbook/2/objects.html#index-signatures) )
 
 有时候我们<font color=dodgerblue> **希望一个接口允许有任意的属性，可以使用如下方式**</font>：
 
@@ -643,7 +643,7 @@ function reverse(x: number | string): number | string | void {
 
   这样就可以解决访问 `animal.swim` 时报错的问题了。
 
-  需要注意的是，类型断言只能够「欺骗」TypeScript 编译器，无法避免运行时的错误，反而滥用类型断言可能会导致运行时错误
+  需要注意的是，类型断言只能够「**欺骗**」TypeScript **编译器**，无法避免运行时的错误，反而滥用类型断言可能会导致运行时错误
 
   ```ts
   interface Cat {
@@ -664,21 +664,20 @@ function reverse(x: number | string): number | string | void {
       run() { console.log('run') }
   };
   swim(tom);
-  // Uncaught TypeError: animal.swim is not a function`
   ```
-
+  
   上面的例子编译时不会报错，但在运行时会报错：
-
+  
   ```autoit
   Uncaught TypeError: animal.swim is not a function`
   ```
-
+  
   原因是 `(animal as Fish).swim()` 这段代码隐藏了 `animal` 可能为 `Cat` 的情况，将 `animal` 直接断言为 `Fish` 了，而 TypeScript 编译器信任了我们的断言，故在调用 `swim()` 时没有编译错误。
-
+  
   可是 `swim` 函数接受的参数是 `Cat | Fish`，一旦传入的参数是 `Cat` 类型的变量，由于 `Cat` 上没有 `swim` 方法，就会导致运行时错误了。
-
+  
   总之，使用类型断言时一定要格外小心，尽量避免断言后调用方法或引用深层属性，以减少不必要的运行时错误
-
+  
 - **将一个父类断言为更加具体的子类**
 
   ```ts
@@ -957,7 +956,7 @@ let tom: Cat = animal;
 // index.ts:12:5 - error TS2741: Property 'run' is missing in type 'Animal' but required in type 'Cat'.
 ```
 
-则会报错，不允许将 `animal` 赋值为 `Cat` 类型的 `tom`。
+则会报错，不允许将 `animal` 赋值给 `Cat` 类型的 `tom`。
 
 这很容易理解，`Animal` 可以看作是 `Cat` 的父类，当然不能将父类的实例赋值给类型为子类的变量。
 
@@ -1055,7 +1054,7 @@ function getLength<T extends hasLength>(arg: T): number {
 getLength([1, 2])
 
 // 多个类型参数之间也可以互相约束：
-// T继承U，这样U中若有T中没有的属性，就会报错
+// T继承U，这样U中若有T中没有的属性，就会报错  (其实可以说成 T中若没有包含U中所有的属性)
 function copyFields<T extends U, U>(target: T, source: U): T {
   for (let id in source) {
     target[id] = (<T>source)[id]
