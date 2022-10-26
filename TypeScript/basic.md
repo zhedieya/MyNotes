@@ -1047,6 +1047,7 @@ getLength([1, 2])
 // T继承U，这样U中若有T中没有的属性，就会报错  (其实可以说成 T中若没有包含U中所有的属性)
 function copyFields<T extends U, U>(target: T, source: U): T {
   for (let id in source) {
+    // 类型断言  将source断言成T 是断言的另一种写法
     target[id] = (<T>source)[id]
   }
   return target

@@ -21,7 +21,7 @@
 
 [答案详情](https://www.ruanyifeng.com/blog/2015/02/mvcmvp_mvvm.html)
 
-### 2. 【重点】vue的底层原理的实现（双向数据绑定原理的实现）?
+### 2. 【重点】vue2的响应式原理的实现?
 
 > Vue是一个典型的MVVM框架，模型（Model）只是普通的JavaScript对象，修改它则视图（View）会自动更新。这种设计让状态管理变得非常简单而直观。那么Vue是如何把模型和视图建立起关联的呢？
 
