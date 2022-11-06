@@ -169,7 +169,7 @@ type Foo = {};
 }
 ```
 
-这时只需执行 `npm run eslint` 即可。
+`这时只需执行` `npm run eslint` 即可。
 
 ### 检查整个项目的 ts 文件[§](https://ts.xcatliu.com/engineering/lint.html#检查整个项目的-ts-文件)
 
