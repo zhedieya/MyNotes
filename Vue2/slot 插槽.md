@@ -42,6 +42,7 @@
 父组件中
 
 ```vue
+<!-- Vue3 -->
 <Category>
     <template #center>
       <div>html结构1</div>
@@ -50,6 +51,15 @@
     <template v-slot:footer>
        <div>html结构2</div>
     </template>
+</Category>
+
+<!-- Vue2.6- -->
+<Category>
+    <template slot="header">
+      <h1>Here might be a page title</h1>
+    </template>
+  <!-- 或者直接把 slot attribute 用在一个普通元素上 -->
+    <h1 slot="header">Here might be a page title</h1>
 </Category>
 ```
 
@@ -88,7 +98,7 @@
    </Category>
    
    <Category>
-        <!-- Vue2 -->
+        <!-- Vue2  Vue2.6已废弃-->
        <template slot-scope="scopeData">
            <!-- 生成的是h4标题 -->
            <h4 v-for="g in scopeData.games" :key="g">{{g}}</h4>
