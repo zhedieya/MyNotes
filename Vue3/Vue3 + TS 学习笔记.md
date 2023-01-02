@@ -2671,7 +2671,7 @@ Vue3 提供了readonly的方法，<font color=FF0000>readonly会返回原生对�
 
 ##### toRefs
 
-如果使用ES6的 解构语法，对reactive返回的对象进行解构获取值，那么之后无论是修改结构后的变量，还是修改reactive 返回的state对象，数据都不再是响应式的。示例如下：
+如果使用ES6的解构语法，对reactive返回的对象进行解构获取值，那么之后无论是修改解构后的变量，还是修改reactive返回的state对象，数据都不再是响应式的。示例如下：
 
 ```js
 const state = reactive( {name: 'foo', age: 18} )
@@ -2685,7 +2685,9 @@ const { name, age } = state
 const { name, age } = toRefs(state)
 ```
 
-<font color=FF0000 size=4>**这种做法相当于已经在state.name和ref.value之间建立了 链接，任何一个修改都会引起另外一个变化**</font>
+<font color=FF0000 size=4>**这种做法相当于已经在state.name和ref.value之间建立了链接，任何一个修改都会引起另外一个变化**</font>
+
+这样的话，使用name时就相当于使用`state['name']`
 
 **toRef**
 
