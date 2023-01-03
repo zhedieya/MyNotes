@@ -138,6 +138,10 @@ url地址美观，路由跳转不需要重新加载页面。
 
 #### HTTP的缓存机制
 
+[神说要有光 HTTP 的缓存为什么这么设计？](https://mp.weixin.qq.com/s/0P8_lnVf2_zMzIBJ20qajA)
+
+[神说要有光 面试官：你懂 HTTP 缓存，那说下浏览器强制刷新是怎么实现的](https://juejin.cn/post/7163506251304239135)
+
 <img src="https://raw.githubusercontent.com/zhedieya/MyPics/main/typora-img/image-20220520123934118.png" alt="image-20220520123934118" style="zoom:35%;" />
 
 ##### 强缓存
