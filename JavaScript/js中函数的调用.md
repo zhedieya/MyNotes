@@ -147,4 +147,81 @@ setTimeout回调函数会经历 Event Loop => Execution Stack => Execute，this�
 
 被作为实参传入另一函数，并在该外部函数内被调用，用以来完成某些任务的函数，称为回调函数。
 
-> *回调函数*作为*高阶函数*的参数，高阶函数通过调用回调函数来执行操作。
+> *回调函数*作为*高阶函数*的参数，**高阶函数**通过调用回调函数来执行操作。
+
+```js
+function loadScript(src, callback) {
+  let script = document.createElement('script');
+  script.src = src;
+  script.onload = () => callback(script);
+  document.head.append(script);
+}
+
+loadScript('https://cdnjs.cloudflare.com/ajax/libs/lodash.js/3.2.0/lodash.js', script => {
+  alert(`酷，脚本 ${script.src} 加载完成`);
+  alert( _ ); // _ 是所加载的脚本中声明的一个函数
+});
+```
+
+被称为“基于回调”的异步编程风格。<font size=3>**异步执行某项功能的函数应该提供一个 `callback` 参数用于在相应事件完成时调用**</font>
+
+多层嵌套的回调函数，会导致**回调地狱**
+
+```js
+loadScript('1.js', function(error, script) {
+  if (error) {
+    handleError(error);
+  } else {
+    // ...
+    loadScript('2.js', function(error, script) {
+      if (error) {
+        handleError(error);
+      } else {
+        // ...
+        loadScript('3.js', function(error, script) {
+          if (error) {
+            handleError(error);
+          } else {
+            // ...加载完所有脚本后继续 (*)
+          }
+        });
+
+      }
+    });
+  }
+});
+```
+
+### 作为函数返回值
+
+```js
+function add(a) {
+    function sum(b) { // 使用闭包
+    	a = a + b; // 累加
+    	return sum;
+    }
+    sum.toString = function() { // 重写toString()方法
+        return a;
+    }
+    return sum; // 返回一个函数
+}
+
+add(1); // 1
+add(1)(2);  // 3
+add(1)(2)(3)； // 6
+add(1)(2)(3)(4)； // 10 
+```
+
+```js
+function fun() {
+  return new Promise((resolve,reject)=>{
+    // ......
+  })
+}
+const res = await fun();
+```
+
+
+
+
+
