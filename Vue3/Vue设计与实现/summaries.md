@@ -44,3 +44,122 @@ Vuejs 的模板会被一个叫作**编译器**的程序编译为渲染函数，�
 
 <img src="https://raw.githubusercontent.com/zhedieya/MyPics/main/typora-img/image-20230215235745491.png" alt="image-20230215235745491" style="zoom:50%;" />
 
+
+
+### 响应系统
+
+#### 响应系统的作用与实现
+
+```js
+const obj = {text: 'cyk'}
+function effect() {
+  document.body.innerText = obj.text
+}
+```
+
+希望值变化后，副作用函数effect会重新执行，更新数据，为了实现响应式数据，可以先发现两点线索：
+
+- 当副作用函数执行时会出发obj.text的**读取**操作
+- 当修改obj.text时，会出发字段obj.text的**设置**操作
+
+初始想法是当读取obj.text字段时，可以将副作用函数存储到一个“桶”里，这样，当设置obj.text时，再将该副作用函数取出来执行即可。
+
+在Vue3中，使用代理对象`Proxy`来拦截一个对象属性的读取和设置操作
+
+初始版本直接通过名字(effect)来获取副作用函数，很不方便，后来完善后：
+
+- 当**读取**操作发生时，将副作用函数收集到桶里
+- 当**设置**操作发生时，从桶中取出副作用函数并执行
+
+通过注册全局变量来存储被注册的副作用函数，解决了上述问题，不过也发现，由于**没有在副作用函数与被操作的目标字段之间建立明确的联系**，导致无论读取的是什么属性，都会收集副作用函数；无论设置的是什么属性，都会把桶里的副作用函数取出并执行。这需要重新设计桶的结构，不能再简单的使用一个Set作为桶了。
+
+```js
+function effect(function effectFn(){
+  document.body.innerText = obj.text
+})
+```
+
+此段代码存在三个角色
+
+- 被操作的代理对象obj
+- 被操作的字段名text
+- 使用effect函数注册的副作用函数effectFn
+
+若用target代表一个代理对象所代理的原始对象，用key来表示被操作的字段名，用effectFn来表示被注册的副作用函数，那么可以建立如下的关系
+
+```shell
+--target
+     --key
+        --effectFn
+```
+
+选择`WeakMap`来存储是因为WeakMap对key是弱引用，若用户侧对代码对target没有任何引用，target会被垃圾回收器回收。
+
+<img src="https://raw.githubusercontent.com/zhedieya/MyPics/main/typora-img/image-20230217001550046.png" alt="image-20230217001550046" style="zoom:30%;" align='left'/>
+
+<img src="https://raw.githubusercontent.com/zhedieya/MyPics/main/typora-img/image-20230217002243702.png" alt="image-20230217002243702" style="zoom:50%;" align="left"/>
+
+```js
+// 存储副作用函数的桶
+const bucket = new WeakMap()
+// 原始数据
+const data = { text: 'hello world' }
+
+const obj = new Proxy(data, {
+  // 拦截对象属性的读取
+  get(target, key) {
+    // 收集依赖，将副作用函数添加进桶
+    track(target, key)
+    return target[key]
+  },
+  // 拦截对象属性的设置
+  set(target, key, newVal) {
+    target[key] = newVal
+    // 触发变化，将副作用函数从桶中取出并执行
+    trigger(target, key)
+  },
+})
+
+//在get拦截函数内调用track函数追踪变化，收集依赖
+function track(target, key) {
+  if (!activeEffect) return
+  // 根据target从桶里拿到depsMap，值是Map(key --> effects)
+  let depsMap = bucket.get(target)
+  // 若不存在，创建一个Map并与target关联
+  if (!depsMap) bucket.set(target, (depsMap = new Map()))
+  // 根据key从depsMap里拿到deps，是Set类型，存放着与key相关的副作用函数effects
+  let deps = depsMap.get(key)
+  // 若不存在，创建一个Set并与key关联
+  if (!deps) depsMap.set(key, (deps = new Set()))
+  deps.add(activeEffect)
+}
+
+//在set拦截函数内调用trigger函数触发变化
+function trigger(target, key) {
+  const depsMap = bucket.get(target)
+  if (!depsMap) return
+  const effects = depsMap.get(key)
+  effects && effects.forEach((fn) => fn())
+}
+
+// 用一个全局变量存储当前激活的 effect 函数
+let activeEffect = undefined
+function effect(fn) {
+  // 当调用 effect 注册副作用函数时，将副作用函数复制给 activeEffect
+  activeEffect = fn
+  // 执行副作用函数
+  fn()
+}
+
+effect(() => {
+  console.log('effect run')
+  document.body.innerText = obj.text
+})
+
+setTimeout(() => {
+  obj.text = 'hello vue3'
+}, 1000)
+```
+
+以上便是一个相对完善的响应式系统
+
