@@ -93,7 +93,7 @@ function effect(function effectFn(){
         --effectFn
 ```
 
-选择`WeakMap`来存储是因为WeakMap对key是弱引用，若用户侧对代码对target没有任何引用，target会被垃圾回收器回收。
+选择`WeakMap`来存储副作用函数和目标字段的关系，选择`WeakMap`来存储是因为WeakMap对key是弱引用，若用户侧对代码对target没有任何引用，target会被垃圾回收器回收。
 
 <img src="https://raw.githubusercontent.com/zhedieya/MyPics/main/typora-img/image-20230217001550046.png" alt="image-20230217001550046" style="zoom:30%;" align='left'/>
 
@@ -162,4 +162,90 @@ setTimeout(() => {
 ```
 
 以上便是一个相对完善的响应式系统
+
+如此就完备了吗？ 当然不是，首先便是**分支切换**
+
+```js
+ const data = { ok: true, text: 'hello world' }
+ const obj = new Proxy(data, { /* ... */ })
+
+ effect(function effectFn() {
+   document.body.innerText = obj.ok ? obj.text : 'not'
+ })
+```
+
+根据上述代码，可知由于字段obj.ok的初始值为`true`，所以副作用函数首先会被字段data.ok和data.text所对应的依赖集合收集，当obj.ok的值改为`false`时，会触发副作用函数重新执行，由于此时obj.text不会被执行，所以理想状态下副作用函数effectFn不应该被obj.text所对应的依赖集合收集，但目前我们的代码实现不了这一点，**会产生遗留的副作用函数**，因为我们只要修改了obj.text的值，effect都会重新执行，即使innerText的值不需要变化。
+
+解决这个问题也很简单，只需在每次执行副作用函数后，将它从所有相关的依赖集合中删除，因此需要重新设计部分函数。
+
+在`track`中完成对依赖集合的收集
+
+```js
+function track(target, key) {
+  /* let depsMap = bucket.get(target)
+  if (!depsMap) {
+    bucket.set(target, (depsMap = new Map()))
+  }
+  let deps = depsMap.get(key)
+  if (!deps) {
+    depsMap.set(key, (deps = new Set()))
+  } */
+  // deps就是与当前副作用函数相关的依赖集合
+  deps.add(activeEffect)
+  // 将该依赖集合存储到activeEffect.deps中
+  activeEffect.deps.push(deps)
+}
+```
+
+<img src="https://raw.githubusercontent.com/zhedieya/MyPics/main/typora-img/image-20230219225137550.png" alt="image-20230219225137550" style="zoom:40%;" align="left" />
+
+有了这个联系后，我们就可以在每次副作用函数执行时，获取到所有相关联的依赖集合，进而将副作用函数从依赖集合中删除
+
+```js
+// 用一个全局变量存储当前激活的 effect 函数
+let activeEffect
+function effect(fn) {
+  const effectFn = () => {
+    cleanup(effectFn)
+    // 当调用 effect 注册副作用函数时，将副作用函数复制给 activeEffect
+    activeEffect = effectFn
+    fn()
+  }
+  // activeEffect.deps 用来存储所有与该副作用函数相关的依赖集合
+  effectFn.deps = []
+  // 执行副作用函数
+  effectFn()
+}
+
+function cleanup(effectFn) {
+  for (let i = 0; i < effectFn.deps.length; i++) {
+    const deps = effectFn.deps[i]
+    deps.delete(effectFn)
+  }
+  effectFn.deps.length = 0
+}
+```
+
+但此时依然没完，问题出现在`trigger`函数中，在该函数内部会遍历effect集合并执行副作用函数，由于是个Set集合，根据语言规范描述，当调用forEach遍历Set集合时，如果一个值已经被访问过了，但该值被删除并重新添加到了集合，若此时forEach没有遍历结束，那么该值会重新被访问，所以会出现类似`set.delete(1)  set.add(1)`这样的代码，会导致无限执行，解决方法是构造一个新的Set集合并遍历。
+
+```js
+ function trigger(target, key) {
+  const depsMap = bucket.get(target)
+  if (!depsMap) return
+  const effects = depsMap.get(key)
+
+  const effectsToRun = new Set()
+  effects && effects.forEach((effectFn) => effectsToRun.add(effectFn))
+  effectsToRun.forEach((effectFn) => effectFn())
+  // effects && effects.forEach(effectFn => effectFn())
+}
+```
+
+​	
+
+
+
+
+
+
 
