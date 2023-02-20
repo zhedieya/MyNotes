@@ -241,7 +241,72 @@ function cleanup(effectFn) {
 }
 ```
 
-​	
+**嵌套的effect：**
+
+对于Vue.js来说，渲染函数是会运行在一个effect()函数中的，所以当组件发生嵌套时，也会发生effect()嵌套，上述代码目前不支持effect()嵌套，问题出在我们实现的effect函数与activeEffect上，我们是用的全局变量activeEffect来存储通过effect函数注册的副作用函数，这意味着当副作用函数发生嵌套时，内层副作用函数的执行会覆盖activeEffect的值，这时如果再有响应式数据执行依赖收集，即使这个响应式数据是在外层副作用函数中读取的，它们收集到的副作用函数也都会是内层副作用函数。
+
+我们需要一个**副作用函数栈effectStack**，当副作用函数执行时，会被压入栈，执行完毕后会被弹出，并始终让activeEffect指向栈顶顶副作用函数，这样就能做到一个响应式数据只会收集直接读取其值的副作用函数。
+
+```js
+// 用一个全局变量存储当前激活的 effect 函数
+let activeEffect
+const effectStack = []
+function effect(fn) {
+  const effectFn = () => {
+    cleanup(effectFn)
+    // 当调用 effect 注册副作用函数时，将副作用函数赋值给 activeEffect
+    activeEffect = effectFn
+    // 调用前将当前副作用函数压入栈中
+    effectStack.push(effectFn)
+    fn()
+    // 副作用函数执行后，将当前副作用函数从栈中弹出
+    effectStack.pop()
+    activeEffect = effectStack[effectStack.length - 1]
+  }
+  // activeEffect.deps 用来存储所有与该副作用函数相关的依赖集合
+  effectFn.deps = []
+  // 执行副作用函数
+  effectFn()
+}
+```
+
+**避免无限递归循环**
+
+实现一个完善的响应式系统需要考虑诸多细节，无限递归循环自然要考虑在内
+
+```js
+const data = {foo: 1}
+const obj = new Proxy(data, {/*...*/})
+
+effect(() => obj.foo++)
+```
+
+该注册的副作用函数的自增操作，会引起栈溢出，自增操作分开来看实际上是这样的：
+
+```js
+obj.foo = obj.foo + 1
+```
+
+在这个语句中，既会读取obj.foo的值，又会设置obj.foo的值，代码执行流程如下：首先读取obj.foo，触发`track`操作，将当前副作用函数收集到桶中，接着+1再赋值给obj.foo，会触发`trigger`操作，把桶里的副作用函数取出来执行，但问题是该副作用函数正在执行中，还没执行完毕就要开始下次执行，会导致无限递归地调用自己，爆栈。
+
+分析问题后发现，读取和设置操作是在同一个副作用函数里的，此时无论时`track`还是`trigger`时收集的副作用函数，都是activeEffect。所以我们可以在trigger动作发生的时候增加守卫条件：**如果 trigger 触发执行的副作用函数与当前正在执行的副作用函数相同，则不触发执行**。
+
+```js
+function trigger(target, key) {
+   const depsMap = bucket.get(target)
+   if (!depsMap) return
+   const effects = depsMap.get(key)
+
+   const effectsToRun = new Set()
+   effects && effects.forEach(effectFn => {
+     // 如果 trigger 触发执行的副作用函数与当前正在执行的副作用函数相同，则不触发执行
+     if (effectFn !== activeEffect) {  // 新增
+       effectsToRun.add(effectFn)
+     }
+   })
+   effectsToRun.forEach(effectFn => effectFn())
+ }
+```
 
 
 
