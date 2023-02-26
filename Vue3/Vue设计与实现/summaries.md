@@ -182,7 +182,8 @@ setTimeout(() => {
 
 ```js
 function track(target, key) {
-  /* let depsMap = bucket.get(target)
+  /* if (!activeEffect) return // 没有正在执行的副作用函数 直接返回 
+  let depsMap = bucket.get(target)
   if (!depsMap) {
     bucket.set(target, (depsMap = new Map()))
   }
@@ -308,9 +309,95 @@ function trigger(target, key) {
  }
 ```
 
+**调度执行**
 
+可调度性是响应系统非常重要的特性，所谓可调度，即是当trigger动作触发副作用函数重新执行时，有能力决定副作用函数执行的时机、次数以及方式。
 
+可以为effect函数设计一个选项参数options，允许用户指定调度器：
 
+```js
+effect(
+  () => {
+    // ......
+  },
+  // options
+  {
+    scheduler: (fn) => {
+      console.log('scheduler run')
+    },
+  }
+)
+```
 
+同时在`effect`函数内部需要把options选项挂载到对应的副作用函数上：
 
+```js
+function effect(fn, options = {}) {
+  const effectFn = () => {
+    // ......
+  }
+  // 将 options 挂载到 effectFn 上
+  effectFn.options = options
+  // activeEffect.deps 用来存储所有与该副作用函数相关的依赖集合
+  effectFn.deps = []
+  // 执行副作用函数
+  effectFn()
+}
+```
+
+有了调度函数，在`trigger`函数中触发副作用函数重新执行时，就可以直接调用用户传递的调度器函数，将控制权交给用户：
+
+```js
+function trigger(target, key) {
+  // .......
+  effectsToRun.forEach((effectFn) => {
+    // 如果副作用函数有 调度器，则调用调度器，并将副作用函数作为参数传入
+    if (effectFn.options.scheduler) {
+      effectFn.options.scheduler(effectFn)
+    } else {
+      effectFn()
+    }
+  })
+}
+```
+
+编写如下的调度器函数，原本需要打印1 2 3的副作用函数会跳过中间的过程直接打印1 3，Vue.js里，连续**多次修改响应式数据只会触发一次更新**，也是实现了个类似思路的更加完善的调度器。
+
+```js
+const data = { foo: 1 }
+
+const jobQueue = new Set()
+// 用一个 Promise 来保证 jobQueue 中的副作用函数是异步执行的
+const p = Promise.resolve()
+
+// 用一个变量 isFlushing 来标识是否正在刷新队列
+let isFlushing = false
+// 该函数作用是，在一个周期内，只执行一次 jobQueue 中的副作用函数
+function flushJob() {
+  if (isFlushing) return
+  isFlushing = true
+  p.then(() => {
+    jobQueue.forEach((job) => job())
+  }).finally(() => {
+    isFlushing = false
+  })
+}
+
+effect(
+  () => {
+    console.log(obj.foo) // 1  3
+  },
+  {
+    scheduler(fn) {
+      // 每次调度时，将副作用函数添加到 jobQueue 中
+      jobQueue.add(fn)
+      // 调用 flushJob 函数，执行将 jobQueue 中的副作用函数
+      flushJob()
+    },
+  }
+)
+
+obj.foo++
+obj.foo++
+```
 
