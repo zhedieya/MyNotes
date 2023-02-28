@@ -547,3 +547,138 @@ effect(function effectFn) {
 <img src="https://raw.githubusercontent.com/zhedieya/MyPics/main/typora-img/image-20230226214220706.png" alt="image-20230226214220706" style="zoom:50%;" />
 
 关于该依赖关系的理解：[issue--77](https://github.com/HcySunYang/code-for-vue-3-book/issues/77)
+
+##### watch
+
+watch的本质就是观测一个响应式数据，当数据发生变化时通知并执行相应的回调函数，本质上就是利用了effect以及options.scheduler选项。
+
+`traverse()`函数实际上就是对一个对象做深层递归遍历，因为遍历过程中就是对一个子属性的访问，会触发它们的 getter 过程，这样就可以track收集到相应的依赖，这样，当深层次对象变化的时候，就会trigger相应的副作用函数更新。
+
+在实现获取旧值和新值中，主要依靠了lazy选项创建了懒执行的effect，手动调用effectFn函数得到的返回值就是旧值，当变化发生并处罚scheduler调度函数执行时，会重新调用effectFn函数并得到新值，并通过回调函数传递出来。
+
+```js
+function watch(source, cb) {
+  let getter
+  // 如果 source 是一个函数，则直接将 source 赋值给 getter
+  if (typeof source === 'function') {
+    getter = source
+  } else {
+    // 调用traverse递归读取source中的所有属性
+    getter = () => traverse(source)
+  }
+
+  let oldValue, newValue
+  const effectFn = effect(() => getter, {
+    lazy: true,
+    scheduler() {
+      newValue = getter()
+      cb(newValue, oldValue)
+      oldValue = newValue
+    },
+  })
+  oldValue = effectFn()
+}
+
+function traverse(value, seen = new Set()) {
+  if (typeof value !== 'object' || value === null || seen.has(value)) return
+  seen.add(value)
+  for (const k in value) {
+    traverse(value[k], seen)
+  }
+  return value
+}
+```
+
+**立即执行的watch与回调执行时机**
+
+实现立即执行的watch，可以将scheduler调度函数封装成通用函数，分别在初始化和变更时执行它
+
+flush值为post时，代表调度函数需要将副作用函数放到一个微任务队列中，并等待DOM更新结束后再执行
+
+```js
+function watch(source, cb, options = {}) {
+  let getter
+  if (typeof source === 'function') {
+    getter = source
+  } else {
+    getter = () => traverse(source)
+  }
+
+  let oldValue, newValue
+  // 封装scheduler调度函数是为了控制执行时机
+  const job = () => {
+    newValue = effectFn()
+    cb(oldValue, newValue)
+    oldValue = newValue
+  }
+
+  const effectFn = effect(
+    // 执行 getter
+    () => getter(),
+    {
+      lazy: true,
+      scheduler: () => {
+        // 在调度函数中判断flush是否为post，如果是则将调度函数放入微任务队列中
+        if (options.flush === 'post') {
+          const p = Promise.resolve()
+          p.then(job)
+        } else {
+          job()
+        }
+      },
+    }
+  )
+  // 如果传入 immediate 选项，则立即执行job，从而触发副作用函数
+  if (options.immediate) {
+    job()
+  } else {
+    oldValue = effectFn()
+  }
+}
+```
+
+**过期的副作用**
+
+过期的副作用函数会导致竞态问题，即连续执行两次watch的回调，调用两次接口，第二次接口可能比第一次接口返回值的速度要快，导致原本应该获得的第二次的返回值被第一次的返回值给覆盖。
+
+Vue.js里，watch函数的回调函数接受第三个参数onInvalidate [watch api](https://cn.vuejs.org/api/reactivity-core.html#watch)，用于注册副作用清理的回调函数。该回调函数会在副作用下一次重新执行前调用，可以用来清除无效的副作用，例如等待中的异步请求。
+
+```js
+  let oldValue, newValue
+  // cleanup用来存储用户注册的过期回调
+  let cleanup
+  function onInvalidate(fn) {
+    cleanup = fn
+  }
+
+  const job = () => {
+    newValue = effectFn()
+    // 在调用回调函数cb前，先调用过期回调
+    if (cleanup) {
+      cleanup()
+    }
+    cb(oldValue, newValue, onInvalidate)
+    oldValue = newValue
+  }
+```
+
+第一次修改是立即执行的，这会导致 watch 的回调函数执行。由于我们在回调函数内调用了 onInvalidate，所以会注册一个过期回调，接着发送请求A。假设请求 A 需要 1000ms 才能返回结果，而我们在 200ms 时第二次修改了 obj.foo 的值，这又会导致 watch 的回调函数执行。这时要注意的是，在我们的实现中，每次执行回调函数之前要先检查过期回调是否存在，如果存在，会优先执行过期回调。由于在 watch 的回调函数第一次执行的时候，我们已经注册了一个过期回调，所以在watch 的回调函数第二次执行之前，会优先执行之前注册的过期回调，这会使得第一次执行的副作用函数内闭包的变量 expired 的值变为 true，即副作用函数的执行过期了。于是等请求 A 的结果返回时，其结果会被抛弃，从而避免了过期的副作用函数带来的影响，
+
+```js
+watch(
+  () => obj.foo,
+  async (newVal, oldVal, onInvalidate) => {
+    let valid = true
+    onInvalidate(() => {
+      valid = false
+    })
+    const res = await fetch()
+
+    if (!valid) return
+
+    finallyData = res
+    console.log(finallyData)
+  },
+)
+```
+
