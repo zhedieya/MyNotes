@@ -287,28 +287,44 @@ export function set(target: Array<any> | Object, key: any, val:
 
 ### 14.为什么v-for和v-if不建议用在一起
 
-因为v-for的优先级高于v-if，若同时使用，每次v-for都会执行v-if,造成性能浪费。
+在`Vue2`中，当遍历一个元素时，添加`v-if`指令，Vue会先将元素遍历出来，之后再通过`v-if`去推断是否渲染该元素（**会触发指令、组件销毁重构**），从这里看到``v-for``的优先级是高于`v-if`的
 
-如果避免出现这种情况，则在外层嵌套`template`（页面渲染不生成`dom`节点），在这一层进行v-if判断，然后在内部进行v-for循环
+在`Vue3`中，如果这两个指令同时使用时，`v-if`比`v-for`优先级更高，但此时`v-if`中**无法访问到`v-for`作用域内定义的变量别名**
 
-```js
-<template v-if="isShow">
-    <p v-for="item in items">
-</template>
-```
+[风格指南 - Avoid v-if with v-for](https://cn.vuejs.org/style-guide/rules-essential.html#avoid-v-if-with-v-for)
 
-如果条件出现在循环内部，可通过计算属性`computed`提前过滤掉那些不需要显示的项
+This could be fixed by iterating over a computed property instead, like this:
 
 ```js
 computed: {
-    items: function() {
-      return this.list.filter(function (item) {
-        return item.isShow
-      })
-    }
+  activeUsers() {
+    return this.users.filter(user => user.isActive)
+  }
 }
 ```
 
+```js
+<ul>
+  <li
+    v-for="user in activeUsers"
+    :key="user.id"
+  >
+    {{ user.name }}
+  </li>
+</ul>
+```
+
+Alternatively, we can use a `<template>` tag with `v-for` to wrap the `<li>` element:
+
+```js
+<ul>
+  <template v-for="user in users" :key="user.id">
+    <li v-if="user.isActive">
+      {{ user.name }}
+    </li>
+  </template>
+</ul>
+```
 
 
 ### 15.v-if和v-show区别
