@@ -2,6 +2,10 @@
 
 ---
 
+> 目前写法都趋向于Vue3的写法，只有Vue2.6以下的使用老写法
+
+
+
 ### 插槽slot
 
 [插槽](https://staging-cn.vuejs.org/guide/components/slots.html)
@@ -42,7 +46,7 @@
 父组件中
 
 ```vue
-<!-- Vue3 -->
+<!-- Vue2.6x+ Vue3 -->
 <Category>
     <template #center>
       <div>html结构1</div>
@@ -84,6 +88,11 @@
    > 父组件中
 
    ```vue
+   <Category v-slot="scopeData">
+     <ul>
+         <li v-for="g in scopeData.games" :key="g">{{g}}</li>
+     </ul>
+   </Category>
    <Category>
        <template v-slot="scopeData"> 
        <!-- 或者以解构的形式获取数据 -->
@@ -154,7 +163,7 @@
 
 向具名插槽中传入 props：
 
-```
+```vue
 <slot name="header" message="hello"></slot>
 ```
 
