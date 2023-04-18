@@ -952,8 +952,8 @@ let tom: Cat = animal;
 
 深入的讲，它们的核心区别就在于：
 
-- `animal` 断言为 `Cat`，只需要满足 `Animal` 兼容 `Cat` 或 `Cat` 兼容 `Animal` 即可
-- `animal` 赋值给 `tom`，需要满足 `Cat` 兼容 `Animal` 才行
+- **`animal` 断言为 `Cat`，只需要满足 `Animal` 兼容 `Cat` 或 `Cat` 兼容 `Animal` 即可**
+- **`animal` 赋值给 `tom`，需要满足 `Cat` 兼容 `Animal` 才行**
 
 但是 `Cat` 并不兼容 `Animal`。
 
@@ -1016,6 +1016,7 @@ tom.run();
 泛型（Generics）是指在定义函数、接口或类的时候，不预先指定具体的类型，而在使用的时候再指定类型的一种特性。
 
 ```typescript
+// 泛型（Generics）是指在定义函数、接口或类的时候，不预先指定具体的类型，而在使用的时候再指定类型的一种特性。
 function createArray<T>(length: number, value: T): Array<T> {
   let result: Array<T> = []
   for (let i = 0; i < length; i++) {
@@ -1029,6 +1030,7 @@ console.log(createArray<string>(3, '1'))
 function swap<T, U>(tuple: [T, U]): [U, T] {
   return [tuple[1], tuple[0]]
 }
+// swap<number, string>([7, 'seven'])   发现使用时可以省略掉类型参数
 swap([7, 'seven']) // ['seven', 7]
 
 // 泛型约束
@@ -1036,6 +1038,7 @@ interface hasLength {
   length: number
 }
 
+// 用途：在函数内部使用泛型变量的时候，由于事先不知道它是哪种类型，所以不能随意的操作它的属性或方法：
 function getLength<T extends hasLength>(arg: T): number {
   console.log(arg.length)
   return arg.length
@@ -1044,11 +1047,11 @@ function getLength<T extends hasLength>(arg: T): number {
 getLength([1, 2])
 
 // 多个类型参数之间也可以互相约束：
-// T继承U，这样U中若有T中没有的属性，就会报错  (其实可以说成 T中若没有包含U中所有的属性)
+// T继承U，这样U中若有T中没有的属性，就会报错  (T中若没有包含U中所有的属性)
 function copyFields<T extends U, U>(target: T, source: U): T {
-  for (let id in source) {
-    // 类型断言  将source断言成T 是断言的另一种写法
-    target[id] = (<T>source)[id]
+  for (let index in source) {
+    // 只能赋值给T中存在的属性 (<T>source)相当于断言source是T类型
+    target[index] = (<T>source)[index]
   }
   return target
 }
@@ -1071,9 +1074,22 @@ createArray1 = function <T>(length: number, value: T): Array<T> {
 }
 
 // 泛型类
+// class GenericNumber<T> {
+//   zeroValue: T
+//   add: (x: T, y: T) => T
+// }
+/*
+tips: 上个例子若不对zeroValue和add初始化，会报错Property 'add' has no initializer and is not definitely assigned in the constructor.
+可以使用非空断言!或者使用可选属性，联合类型
+或者修改配置
+"compilerOptions": {
+    "strictPropertyInitialization": false
+  }
+*/
+
 class GenericNumber<T> {
-  zeroValue: T
-  add: (x: T, y: T) => T
+  zeroValue?: T
+  add?: (x: T, y: T) => T
 }
 
 let myGenericNumber = new GenericNumber<number>()
@@ -1090,6 +1106,7 @@ function createArray2<T = string>(length: number, value: T): Array<T> {
   }
   return result
 }
+
 ```
 
 #### 声明文件
@@ -1133,7 +1150,7 @@ function createArray2<T = string>(length: number, value: T): Array<T> {
 
 >注：都只能用来定义类型，不能用来定义具体的实现
 
-全局变量是最简单的场景，最上面⬆️举的例子就是全局变量
+全局变量是最简单的场景，最上面⬆️举的例子就是全局变量 [advanced.md](advanced.md) 
 
 使用全局变量的声明文件时，如果是以 `npm install @types/xxx --save-dev` 安装的，则不需要任何配置。如果是将声明文件直接存放于当前项目中，则建议和其他源码一起放到 `src` 目录下
 
