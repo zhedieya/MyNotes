@@ -387,7 +387,7 @@ function _new(func, ...args) {
   obj.__proto__ = func.prototype;
   // 3.执行构造函数，将属性和方法添加到新创建的新对象上
   let result = func.apply(obj, args)
-  // 4.如果构造函数执行的结构返回的是一个对象，那么返回这个对象
+  // 4.如果构造函数执行的结果返回的是一个对象，那么返回这个对象
   if (result && typeof (result) == 'object' || typeof (result) == 'fuction') {
     return result;
   }
